@@ -1,29 +1,33 @@
-import express from "express";
-import mongoose from "mongoose";
-import router from "./routes/userRoute";
-import { seedInitialProducts } from "./services/productServices";
-import routerProduct from "./routes/productRoute";
-import routerCart from "./routes/cartRoute";
 import dotenv from "dotenv";
 
-const app =express();
-const port = 3001;
+import express from "express";
+import mongoose from "mongoose";
+import userRoute from "./routes/userRoute";
+import productRoute from "./routes/productRoute";
+import cartRoute from "./routes/cartRoute";
+import { seedInitialProducts } from "./services/productService";
+import cors from "cors";
+
 dotenv.config();
 
-mongoose.connect(process.env.DATABASE_URL || "")
-.then(() => console.log("Connecting Success"))
-.catch((err) => console.log("Faild" , err));
+const app = express();
+const port = 3001;
+
 app.use(express.json());
+app.use(cors());
 
+mongoose
+  .connect(process.env.DATABASE_URL || "")
+  .then(() => console.log("Mongo connected!"))
+  .catch((err) => console.log("Failed to connect!", err));
 
+// Seed the products to database
 seedInitialProducts();
 
-app.use("/user", router);
-app.use("/product", routerProduct);
-app.use("/cart", routerCart);
+app.use("/user", userRoute);
+app.use("/product", productRoute);
+app.use("/cart", cartRoute);
 
-
-app.listen(port,()=>{
-    console.log(`Server is running at: http://localhost:${port}`);
-})
-    
+app.listen(port, () => {
+  console.log(`Server is running at: http://localhost:${port}`);
+});

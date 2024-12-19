@@ -1,18 +1,38 @@
 import express from "express";
-import {  addItemToCart, deleteItemIncart, getActiveCartForUser, updateItemInCart } from "../services/cartServices";
+import {
+  addItemToCart,
+  checkout,
+  clearCart,
+  deleteItemIncart,
+  getActiveCartForUser,
+  updateItemInCart,
+} from "../services/cartService";
 import validateJWT from "../middlewares/validateJWT";
 import { ExtendRequest } from "../types/extendedRequest";
 
+const router = express.Router();
 
-const routerCart = express.Router();
-
-routerCart.get("/", validateJWT, async (req: ExtendRequest, res) => {
+router.get("/", validateJWT, async (req: ExtendRequest, res) => {
+  try {
     const userId = req?.user?._id;
-      const cart = await getActiveCartForUser({userId});
-        res.status(200).send(cart);
- },);
+    const cart = await getActiveCartForUser({ userId, populateProduct: true });
+    res.status(200).send(cart);
+  } catch (err) {
+    res.status(500).send("Something went wrong!");
+  }
+});
 
- routerCart.post("/items", validateJWT, async (req: ExtendRequest, res) => {
+router.delete("/", validateJWT, async (req: ExtendRequest, res) => {
+  try {
+    const userId = req?.user?._id;
+    const response = await clearCart({ userId });
+    res.status(response.statusCode).send(response.data);
+  } catch {
+    res.status(500).send("Something went wrong!");
+  }
+});
+
+router.post("/items", validateJWT, async (req: ExtendRequest, res) => {
   try {
     const userId = req?.user?._id;
     const { productId, quantity } = req.body;
@@ -23,7 +43,7 @@ routerCart.get("/", validateJWT, async (req: ExtendRequest, res) => {
   }
 });
 
-routerCart.put("/items", validateJWT, async (req: ExtendRequest, res) => {
+router.put("/items", validateJWT, async (req: ExtendRequest, res) => {
   try {
     const userId = req?.user?._id;
     const { productId, quantity } = req.body;
@@ -33,8 +53,8 @@ routerCart.put("/items", validateJWT, async (req: ExtendRequest, res) => {
     res.status(500).send("Something went wrong!");
   }
 });
- 
-routerCart.delete(
+
+router.delete(
   "/items/:productId",
   validateJWT,
   async (req: ExtendRequest, res) => {
@@ -48,4 +68,16 @@ routerCart.delete(
     }
   }
 );
- export default  routerCart;
+
+router.post("/checkout", validateJWT, async (req: ExtendRequest, res) => {
+  try {
+    const userId = req?.user?._id;
+    const { address } = req.body;
+    const response = await checkout({ userId, address });
+    res.status(response.statusCode).send(response.data);
+  } catch {
+    res.status(500).send("Something went wrong!");
+  }
+});
+
+export default router;

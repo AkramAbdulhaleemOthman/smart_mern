@@ -1,10 +1,8 @@
-import { NextFunction, Response , Request} from "express";
+import { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
-import userModel from "../model/userModel";
+import userModel from "../models/userModel";
+import { ExtendRequest } from "../types/extendedRequest";
 
-interface ExtendRequest extends Request{
-    user?: any;
-}
 const validateJWT = (req: ExtendRequest, res: Response, next: NextFunction) => {
   const authorizationHeader = req.get("authorization");
 
@@ -20,7 +18,7 @@ const validateJWT = (req: ExtendRequest, res: Response, next: NextFunction) => {
     return;
   }
 
-  jwt.verify(token,  process.env.JWT_SECRET || "", async (err, payload) => {
+  jwt.verify(token, process.env.JWT_SECRET || "", async (err, payload) => {
     if (err) {
       res.status(403).send("Invalid token");
       return;
